@@ -10,7 +10,9 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
+import java.util.concurrent.atomic.AtomicInteger;
 import javax.swing.JOptionPane;
+import javax.swing.JProgressBar;
 
 /**
  *
@@ -18,12 +20,14 @@ import javax.swing.JOptionPane;
  */
 public class txtFormatter extends Thread{
     
-    String loadedText;
-    File txtFile;
-    String replace, with, normalize, delete, saveAs, separator;
-    boolean willReplace, willDelete, willSaveAs, willCase, willGroup, willNormalize;
-    boolean deleteBefore, lowercase;
-    int group;
+    private String loadedText;
+    private File txtFile;
+    private String replace, with, normalize, delete, saveAs, separator;
+    private boolean willReplace, willDelete, willSaveAs, willCase, willGroup, willNormalize;
+    private boolean deleteBefore;
+    private int group, caseMode;
+    private volatile JProgressBar progress;
+    private AtomicInteger counter;
     
     public txtFormatter(File txtFile) {
         
@@ -38,6 +42,7 @@ public class txtFormatter extends Thread{
     
     @Override
     public void run() {
+        
         this.loadTextfromFile();
         
         this.caseWords();
@@ -47,6 +52,7 @@ public class txtFormatter extends Thread{
         this.groupData();
         
         try {
+            
             if( !this.saveAs.equals(".txt") )
                 Files.writeString(Paths.get( this.txtFile.getAbsolutePath().
                         replace( ".txt", this.saveAs ) ), this.loadedText, 
@@ -55,41 +61,58 @@ public class txtFormatter extends Thread{
                 Files.writeString(Paths.get( this.txtFile.getAbsolutePath() ), this.loadedText, 
                         StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING);
             
-           
         } catch (IOException ex) {
             JOptionPane.showMessageDialog(null, "Couldn't write into file: " + ex.getMessage() );
         }
         
+
+        incrementProgress();
         this.loadedText = "";
         this.delete = "";
         this.normalize = "";
         this.replace = "";
         this.txtFile = null;
-        System.gc();
+        
     }
 
-    @Override
-    public synchronized void start() {
-        this.run();
+    private synchronized void incrementProgress()
+    {
+        this.progress.setValue( this.counter.incrementAndGet() );
+        this.progress.setToolTipText( "Completed: " + this.progress.getValue());
     }
-    
+   
     private void caseWords()
     {
         if( this.willCase )
-            if( this.lowercase )
-                this.loadedText = this.loadedText.toLowerCase();
-            else
-                this.loadedText = this.loadedText.toUpperCase(); 
+            switch(this.caseMode)
+            {
+                case 0:
+                    this.loadedText = this.loadedText.toUpperCase();
+                    break;
+                case 1:
+                    this.loadedText = this.loadedText.toLowerCase();
+                    break;
+                case 2:
+                    String[] words = this.loadedText.split(" ");
+                    for(String word : words)
+                        if(word.length() > 0)
+                            if( Character.isLetter( word.charAt(0) ) )
+                            {
+                                word = word.toLowerCase();
+                                word = Character.toUpperCase( word.charAt(0) ) + word.substring(1);
+                            } 
+                    break;
+            }
     }
     
     private void deleteText()
     {
-        
         if( this.willDelete )
         {
             this.delete = this.delete.replace("\\n", "\n");
             this.delete = this.delete.replace("\\t", "\t");
             this.delete = this.delete.replace("\\r", "\r");
+            
             if( this.loadedText.contains(this.delete) )
             {
                 if( this.deleteBefore )
@@ -97,21 +120,29 @@ public class txtFormatter extends Thread{
                 else
                     this.loadedText = this.loadedText.substring( 0, this.loadedText.indexOf(this.delete) );
             }
-            else
-                JOptionPane.showMessageDialog(null, this.delete + 
-                        " was not found in thid file: " + this.txtFile.getAbsolutePath());
+            /*else
+                JOptionPane.showMessageDialog( null, this.delete + 
+                        " was not found in thid file: " + this.txtFile.getAbsolutePath() );*/
         }
+        
     }
     
     private void normalize()
     {
         if( this.willNormalize )
         {
-            if(this.normalize.equals(","))
-                this.loadedText = this.loadedText.replaceAll(this.normalize, "");
+            if(this.normalize.equals("ANSI"))
+            {
+                char[] bytes =  this.loadedText.toCharArray();
+                this.loadedText = "";
+                for(char b : bytes)
+                    if( ( (int)b ) > 127 )
+                       this.loadedText = this.loadedText + "\\" + ( (int)b );
+                    else
+                        this.loadedText = this.loadedText + b;
+            }
             else
                 this.loadedText = this.loadedText.replaceAll("\\s{1,}", this.normalize);
-            
         }
     }
     
@@ -126,6 +157,7 @@ public class txtFormatter extends Thread{
             this.with = this.with.replace("\\n", "\n");
             this.with = this.with.replace("\\t", "\t");
             this.with = this.with.replace("\\r", "\r");
+            
             this.loadedText = this.loadedText.replaceAll(this.replace, this.with);
         }
     }
@@ -167,8 +199,8 @@ public class txtFormatter extends Thread{
         
     }
 
-    public void setLowercase(boolean lowercase) {
-        this.lowercase = lowercase;
+    public void setCaseMode(int caseMode) {
+        this.caseMode = caseMode;
     }
     
     public void setDeleteBefore(boolean deleteBefore) {
@@ -226,5 +258,13 @@ public class txtFormatter extends Thread{
     public void setWillNormalize(boolean willNormalize) {
         this.willNormalize = willNormalize;
     }   
+
+    public void setProgress(JProgressBar progress) {
+        this.progress = progress;
+    }
+
+    public void setCounter(AtomicInteger counter) {
+        this.counter = counter;
+    }
     
 }

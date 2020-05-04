@@ -7,6 +7,7 @@ package formatmytxts;
 
 import java.awt.Component;
 import java.io.File;
+import java.util.concurrent.atomic.AtomicInteger;
 import javax.swing.JComponent;
 import javax.swing.JFileChooser;
 import javax.swing.filechooser.FileNameExtensionFilter;
@@ -23,6 +24,7 @@ public class FormatMyTxt_Frame extends javax.swing.JFrame {
     public FormatMyTxt_Frame() {
         initComponents();
         this.jFileChooser1.setMultiSelectionEnabled(true);
+        this.counter = new AtomicInteger(0);
        
     }
 
@@ -67,6 +69,9 @@ public class FormatMyTxt_Frame extends javax.swing.JFrame {
         jCheckBox5 = new javax.swing.JCheckBox();
         jRadioButton6 = new javax.swing.JRadioButton();
         jRadioButton7 = new javax.swing.JRadioButton();
+        jRadioButton9 = new javax.swing.JRadioButton();
+        jPanel8 = new javax.swing.JPanel();
+        jProgressBar1 = new javax.swing.JProgressBar();
 
         jFileChooser1.setAcceptAllFileFilterUsed(false);
         jFileChooser1.setApproveButtonText("SELECT");
@@ -209,7 +214,7 @@ public class FormatMyTxt_Frame extends javax.swing.JFrame {
         });
         jPanel5.add(jRadioButton3);
 
-        jRadioButton8.setText("Clear commas");
+        jRadioButton8.setText("Go ASCII");
         jRadioButton8.setEnabled(false);
         jRadioButton8.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseReleased(java.awt.event.MouseEvent evt) {
@@ -246,7 +251,7 @@ public class FormatMyTxt_Frame extends javax.swing.JFrame {
 
         jPanel4.setLayout(new java.awt.FlowLayout(java.awt.FlowLayout.LEFT));
 
-        jCheckBox5.setText("Make all...");
+        jCheckBox5.setText("Upper-case...");
         jCheckBox5.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseReleased(java.awt.event.MouseEvent evt) {
                 jCheckBox5MouseReleased(evt);
@@ -255,7 +260,7 @@ public class FormatMyTxt_Frame extends javax.swing.JFrame {
         jPanel4.add(jCheckBox5);
 
         jRadioButton6.setSelected(true);
-        jRadioButton6.setText("lowercase");
+        jRadioButton6.setText("ALL");
         jRadioButton6.setEnabled(false);
         jRadioButton6.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseReleased(java.awt.event.MouseEvent evt) {
@@ -264,7 +269,7 @@ public class FormatMyTxt_Frame extends javax.swing.JFrame {
         });
         jPanel4.add(jRadioButton6);
 
-        jRadioButton7.setText("UPPERCASE");
+        jRadioButton7.setText("none");
         jRadioButton7.setEnabled(false);
         jRadioButton7.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseReleased(java.awt.event.MouseEvent evt) {
@@ -273,7 +278,24 @@ public class FormatMyTxt_Frame extends javax.swing.JFrame {
         });
         jPanel4.add(jRadioButton7);
 
+        jRadioButton9.setText("First");
+        jRadioButton9.setEnabled(false);
+        jRadioButton9.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseReleased(java.awt.event.MouseEvent evt) {
+                jRadioButton9MouseReleased(evt);
+            }
+        });
+        jPanel4.add(jRadioButton9);
+
         jPanel1.add(jPanel4);
+
+        jPanel8.setLayout(new javax.swing.BoxLayout(jPanel8, javax.swing.BoxLayout.LINE_AXIS));
+
+        jProgressBar1.setToolTipText("Completed: 0");
+        jProgressBar1.setStringPainted(true);
+        jPanel8.add(jProgressBar1);
+
+        jPanel1.add(jPanel8);
 
         getContentPane().add(jPanel1);
 
@@ -334,22 +356,32 @@ public class FormatMyTxt_Frame extends javax.swing.JFrame {
         
         if( this.jFileChooser1.showOpenDialog(jPanel2) != JFileChooser.APPROVE_OPTION)
             return;
-
+        else
+        {
+            this.counter.set(0);
+            this.jProgressBar1.setValue(0);
+        }
+        
         
     }//GEN-LAST:event_jButton1MouseReleased
 
     private void jRadioButton6MouseReleased(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jRadioButton6MouseReleased
         if(!this.jRadioButton6.isEnabled())
             return;
+        
         this.jRadioButton6.setSelected(true);
         this.jRadioButton7.setSelected(false);
+        this.jRadioButton9.setSelected(false);
     }//GEN-LAST:event_jRadioButton6MouseReleased
 
     private void jRadioButton7MouseReleased(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jRadioButton7MouseReleased
         if(!this.jRadioButton7.isEnabled())
             return;
+        
         this.jRadioButton7.setSelected(true);
         this.jRadioButton6.setSelected(false);
+        this.jRadioButton9.setSelected(false);
+        
     }//GEN-LAST:event_jRadioButton7MouseReleased
 
     private void jRadioButton5MouseReleased(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jRadioButton5MouseReleased
@@ -405,6 +437,10 @@ public class FormatMyTxt_Frame extends javax.swing.JFrame {
         this.txtThreads = new txtFormatter[nFiles];
         int index = 0;
         
+        this.counter.set(0);
+        this.jProgressBar1.setValue(0);
+        this.jProgressBar1.setMaximum(nFiles);
+        
         for( File file : files)
         {
             this.txtThreads[index] = new txtFormatter(file);
@@ -440,6 +476,17 @@ public class FormatMyTxt_Frame extends javax.swing.JFrame {
     this.jRadioButton4.setSelected(true);
 
     }//GEN-LAST:event_jRadioButton4MouseReleased
+
+    private void jRadioButton9MouseReleased(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jRadioButton9MouseReleased
+    
+        if(!this.jRadioButton9.isEnabled())
+            return;
+
+        this.jRadioButton9.setSelected(true);
+        this.jRadioButton6.setSelected(false);
+        this.jRadioButton7.setSelected(false);
+        
+    }//GEN-LAST:event_jRadioButton9MouseReleased
 
     /**
      * @param args the command line arguments
@@ -490,6 +537,9 @@ public class FormatMyTxt_Frame extends javax.swing.JFrame {
     
     private void setChanges(txtFormatter currentOne)
     {
+        currentOne.setProgress(this.jProgressBar1);
+        currentOne.setCounter(counter);
+        
         if(this.jCheckBox1.isSelected())
         {
                 currentOne.setWillDelete(true);
@@ -508,7 +558,7 @@ public class FormatMyTxt_Frame extends javax.swing.JFrame {
             else if( this.jRadioButton3.isSelected() )
                 currentOne.setNormalize("\n");
             else if( this.jRadioButton8.isSelected() )
-                currentOne.setNormalize(",");
+                currentOne.setNormalize("ANSI");
         }
         
         if(this.jCheckBox3.isSelected())
@@ -528,7 +578,17 @@ public class FormatMyTxt_Frame extends javax.swing.JFrame {
         if(this.jCheckBox5.isSelected())
         {
                 currentOne.setWillCase(true);
-                currentOne.setLowercase(this.jRadioButton6.isSelected() );
+                
+                int caseMode = -1;
+                
+                caseMode = this.jRadioButton6.isSelected() ? 0 : caseMode;
+                caseMode = this.jRadioButton7.isSelected() ? 1 : caseMode;
+                caseMode = this.jRadioButton9.isSelected() ? 2 : caseMode;
+                
+                currentOne.setCaseMode( caseMode );
+                currentOne.setCaseMode( caseMode );
+                currentOne.setCaseMode( caseMode );
+                
         }
         
         if(this.jCheckBox7.isSelected())
@@ -558,6 +618,8 @@ public class FormatMyTxt_Frame extends javax.swing.JFrame {
     private javax.swing.JPanel jPanel5;
     private javax.swing.JPanel jPanel6;
     private javax.swing.JPanel jPanel7;
+    private javax.swing.JPanel jPanel8;
+    private javax.swing.JProgressBar jProgressBar1;
     private javax.swing.JRadioButton jRadioButton1;
     private javax.swing.JRadioButton jRadioButton2;
     private javax.swing.JRadioButton jRadioButton3;
@@ -566,6 +628,7 @@ public class FormatMyTxt_Frame extends javax.swing.JFrame {
     private javax.swing.JRadioButton jRadioButton6;
     private javax.swing.JRadioButton jRadioButton7;
     private javax.swing.JRadioButton jRadioButton8;
+    private javax.swing.JRadioButton jRadioButton9;
     private javax.swing.JSpinner jSpinner1;
     private javax.swing.JTextField jTextField1;
     private javax.swing.JTextField jTextField2;
@@ -575,5 +638,5 @@ public class FormatMyTxt_Frame extends javax.swing.JFrame {
     // End of variables declaration//GEN-END:variables
     
     private txtFormatter[] txtThreads;
-
+    private AtomicInteger counter;
 }
